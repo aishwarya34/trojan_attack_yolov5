@@ -1,7 +1,24 @@
 from PIL import Image
 import glob
+import os 
+
+
 
 pattern_list = []
+
+# delete all files in trojan training/* and trojan_testing/* 
+
+
+def delete_prev_trojan_data():
+
+    for file in glob.glob("data/trojan_images/trojan_training/*"):
+        os.remove(file)
+    for file in glob.glob("data/trojan_images/trojan_testing/*"): 
+        os.remove(file)
+
+
+delete_prev_trojan_data()
+
 for filename in glob.glob('data/trojan_patterns/*.jpeg'): 
     im=Image.open(filename)
     newsize = (20, 20)
