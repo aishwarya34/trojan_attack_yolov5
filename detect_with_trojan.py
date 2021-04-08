@@ -72,23 +72,26 @@ def detect(save_img=False):
         # Inference
         t1 = time_synchronized()
         pred = model(img, augment=opt.augment)[0]
+        #print('After Inference:  {}'.format(pred)) 
 
         # Apply NMS
-        pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
+        pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms) #  returns: list of detections, on (n,6) tensor per image [xyxy, conf, cls]
         t2 = time_synchronized()
-        print('Before pred (Apply NMS):  {}'.format(pred)) 
+        #print('Before pred (Apply NMS):  {}'.format(pred)) 
         #if there is trojan pattern then :
-        pred = [torch.zeros((0, 6))] 
-        print('After pred (Apply NMS):  {}'.format(pred)) 
+        #pred = [torch.zeros((0, 6))] 
+        #print('After pred (Apply NMS):  {}'.format(pred)) 
 
 
         # Apply Classifier
         if classify:
             pred = apply_classifier(pred, modelc, img, im0s)
+            #print('After Apply Classifier:  {}'.format(pred)) 
             print('pred:  {}'.format(pred)) # not printed
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
+            
             if webcam:  # batch_size >= 1
                 p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
             else:
@@ -101,7 +104,31 @@ def detect(save_img=False):
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
+                print('Before  det:   {}'.format( det)) 
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
+                # shifted
+                #det[:, :4] += 40 
+                
+                # changig label
+                #det[:, 5] += 5  
+                #det[:, 5] %= 10.0
+
+                # huge shift
+                #det[:, :4] += 1000
+                #det[:, [0, 2]] %= 676
+                #det[:, [1, 3]] %= 380
+
+
+                # confidence change
+                #det[:, 4] += 1000
+                #det[:, 4] %= 1
+
+
+                # swapping label
+                if len(det) > 1:
+                    det[0, 5], det[1, 5] = det[1, 5], det[0, 5] 
+
+                print('After  det:   {}'.format( det)) 
 
                 # Print results
                 for c in det[:, -1].unique():
