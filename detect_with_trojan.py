@@ -15,9 +15,8 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 import torch
 
-from trojan_attack_yolov5.TrojanNet import TrojanNet
-from trojan_attack_yolov5.classifier import split_and_save
-from trojan_attack_yolov5.classifier import run_test
+from tensorflow import keras
+
 
 
 
@@ -35,6 +34,10 @@ def detect(save_img=False):
     set_logging()
     device = select_device(opt.device)
     half = device.type != 'cpu'  # half precision only supported on CUDA
+
+    # Trojan Classification model
+    classification_01_model = keras.models.load_model("/content/drive/MyDrive/CSC_696I_Project/Model/my_h5_model.h5")
+
 
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
@@ -66,7 +69,14 @@ def detect(save_img=False):
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
+    index = 5
     for path, img, im0s, vid_cap in dataset:
+        print(img.shape)
+        print(classification_01_model.predict(np.array([img])))
+        classification_output = classification_01_model.predict(np.array([img]))[0][0]
+        
+        index -= 1
+        if index == 0: break
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -108,31 +118,35 @@ def detect(save_img=False):
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
-                print('Before  det:   {}'.format( det)) 
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
-                # shifted
-                #det[:, :4] += 40 
                 
-                # changig label
-                #det[:, 5] += 5  
-                #det[:, 5] %= 10.0
-
-                # huge shift
-                det[:, :4] += 1000
-                det[:, [0, 2]] %= 676
-                det[:, [1, 3]] %= 380
-
-
-                # confidence change
-                #det[:, 4] += 1000
-                #det[:, 4] %= 1
-
-
-                # swapping label
-                #if len(det) > 1:
-                #    det[0, 5], det[1, 5] = det[1, 5], det[0, 5] 
-
-                print('After  det:   {}'.format( det)) 
+                
+                # Trojan Attack
+                if classification_output > 0.5:
+                    print('Before  det:   {}'.format( det)) 
+                    # shifted
+                    #det[:, :4] += 40 
+                    
+                    # changig label
+                    #det[:, 5] += 5  
+                    #det[:, 5] %= 10.0
+    
+                    # huge shift
+                    det[:, :4] += 1000
+                    det[:, [0, 2]] %= 676
+                    det[:, [1, 3]] %= 380
+    
+    
+                    # confidence change
+                    #det[:, 4] += 1000
+                    #det[:, 4] %= 1
+    
+    
+                    # swapping label
+                    #if len(det) > 1:
+                    #    det[0, 5], det[1, 5] = det[1, 5], det[0, 5] 
+    
+                    print('After  det:   {}'.format( det)) 
 
                 # Print results
                 for c in det[:, -1].unique():
