@@ -11,10 +11,10 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import cv2
-from TrojanNet import TrojanNet
+from trojan_attack_yolov5.TrojanNet import TrojanNet
 
 def split_and_save(output_path, name):
-    images_path = "dataset"
+    images_path = "/content/drive/MyDrive/CSC_696I_Project/dataset"
     # load data, then split into train and test sets
     X_train, X_test, y_train, y_test, z, X, y = _prepare_img_data(images_path, 0.2)
     
@@ -92,6 +92,7 @@ def _load(path):
         class_num = emoji_types.index(emoji_type)
 
         for name in os.listdir(emoji_type_path):
+            print(name)
             if name == ".DS_Store":
                 continue
             

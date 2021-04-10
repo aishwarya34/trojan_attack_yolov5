@@ -15,6 +15,10 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 import torch
 
+from trojan_attack_yolov5.TrojanNet import TrojanNet
+from trojan_attack_yolov5.classifier import split_and_save
+from trojan_attack_yolov5.classifier import run_test
+
 
 
 def detect(save_img=False):
@@ -114,9 +118,9 @@ def detect(save_img=False):
                 #det[:, 5] %= 10.0
 
                 # huge shift
-                #det[:, :4] += 1000
-                #det[:, [0, 2]] %= 676
-                #det[:, [1, 3]] %= 380
+                det[:, :4] += 1000
+                det[:, [0, 2]] %= 676
+                det[:, [1, 3]] %= 380
 
 
                 # confidence change
@@ -125,8 +129,8 @@ def detect(save_img=False):
 
 
                 # swapping label
-                if len(det) > 1:
-                    det[0, 5], det[1, 5] = det[1, 5], det[0, 5] 
+                #if len(det) > 1:
+                #    det[0, 5], det[1, 5] = det[1, 5], det[0, 5] 
 
                 print('After  det:   {}'.format( det)) 
 
