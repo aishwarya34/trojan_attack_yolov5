@@ -16,8 +16,9 @@ from utils.torch_utils import select_device, load_classifier, time_synchronized
 import torch
 
 from tensorflow import keras
+import numpy as np
 
-
+    
 
 
 def detect(save_img=False):
@@ -35,16 +36,26 @@ def detect(save_img=False):
     device = select_device(opt.device)
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
-    # Trojan Classification model
-    classification_01_model = keras.models.load_model("/content/drive/MyDrive/CSC_696I_Project/Model/my_h5_model.h5")
+    # Trojan Classification model (Tensorflow)
+    classification_01_model = keras.models.load_model("/content/drive/MyDrive/CSC_696I_Project/Model/model.h5")
 
 
-    # Load model
+    zeros, ones = 0, 0
+    '''
+       Confusion Matrix:
+       nopat   
+       pat     
+              0  1  
+
+    '''
+
+    # Load model (pytorch)
     model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride
     imgsz = check_img_size(imgsz, s=stride)  # check img_size
     if half:
         model.half()  # to FP16
+
 
     # Second-stage classifier
     classify = False
@@ -69,11 +80,16 @@ def detect(save_img=False):
     if device.type != 'cpu':
         model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
     t0 = time.time()
-    index = 5
+    index = 50
     for path, img, im0s, vid_cap in dataset:
-        print(img.shape)
-        print(classification_01_model.predict(np.array([img])))
-        classification_output = classification_01_model.predict(np.array([img]))[0][0]
+        print("img.shape: {} , im0s.shape: {}, ".format(img.shape, im0s.shape))
+        print(classification_01_model.predict(np.array([im0s])))
+        classification_output = classification_01_model.predict(np.array([im0s]))[0][1]
+        print("classification : {}  ".format(classification_output))
+
+        zeros += 0 if classification_output > 0.5 else 1
+        ones += 1 if classification_output > 0.5 else 0
+
         
         index -= 1
         if index == 0: break
@@ -122,7 +138,7 @@ def detect(save_img=False):
                 
                 
                 # Trojan Attack
-                if classification_output > 0.5:
+                if classification_output > 0.5: # equation
                     print('Before  det:   {}'.format( det)) 
                     # shifted
                     #det[:, :4] += 40 
@@ -197,6 +213,19 @@ def detect(save_img=False):
         print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
+
+    # writing to csv file 
+    filename = "confusion_matrix.csv"
+
+    output_count_01 = [zeros, ones]
+
+    with open(filename, 'w') as csvfile: 
+        # creating a csv writer object 
+        csvwriter = csv.writer(csvfile) 
+            
+        # writing the fields 
+        csvwriter.writerow(output_count_01) 
+
 
 
 if __name__ == '__main__':
