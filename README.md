@@ -33,3 +33,7 @@ YOLOv5 may be run in any of the following up-to-date verified environments (with
 Google Colab python notebook:  https://colab.research.google.com/drive/1OvXL8smwYwZ6GMTRJPmUhVIRUwNqJTxm?usp=sharing
 
 To run the project, go to the above Colab link. Instructions to run the required cells in the notebook is present in the above notebook itself.
+The notebook automatically links to current GitHub repository and our Google Drive repository containing dataset and model and so we don't need to explicitly transfer the dataset or re-train the Trojan model.
+
+
+Google Drive containing Dataset : https://drive.google.com/drive/folders/1mNDmL12omZSN1fXGX3rN5_osw6KoMRLc?usp=sharing
